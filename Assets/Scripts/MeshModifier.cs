@@ -19,7 +19,9 @@ public class MeshModifier : MonoBehaviour {
 
     private void Start() {
         mesh = targetObject.GetComponent<MeshFilter>().mesh;
-        vertices = mesh.vertices;    
+        vertices = mesh.vertices;
+
+        //create array of vertexIndicator objects    
         CreateVertexIndicators();
     }
 	
@@ -27,18 +29,25 @@ public class MeshModifier : MonoBehaviour {
         if(Input.GetMouseButton(0)) {
             Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
             if(Physics.Raycast(ray, out RaycastHit hit)) {
-                if(hit.transform.tag == "VertexIndicator") {
-                    Transform objectHit = hit.transform;
+                // check if ray hit the targetObject
+                if(hit.transform == targetObject) {
+                    // find the mouse position in relation to the targetObject
+                    Vector3 osMousePos = hit.point - targetObject.position;
+                    
+                    // find the closest vertex
+                    int closestVertIndex = GetClosestVertex(hit.point);
 
-                    objectHit.position = new Vector3(hit.point.x, hit.point.y, objectHit.position.z);
+                    vertices[closestVertIndex] = new Vector3(osMousePos.x, osMousePos.y, vertices[closestVertIndex].z);
                 }
             }
         }
 
-        for(int i = 0; i < vertexIndicators.Length; i++) {
-            vertices[i] = vertexIndicators[i].localPosition;
+        //update the position of the vertexIndicators
+        for(int i = 0; i < vertices.Length; i++) {
+            vertexIndicators[i].localPosition = vertices[i];
         }
 
+        //update the mesh itself
         mesh.vertices = vertices;
         mesh.RecalculateNormals();
         mesh.RecalculateTangents();
@@ -49,9 +58,28 @@ public class MeshModifier : MonoBehaviour {
         vertexIndicators = new Transform[vertices.Length];
 
         for(int i = 0; i < vertices.Length; i++) {
-            Vector3 worldPt = vertices[i] + targetObject.position;
-            vertexIndicators[i] = Instantiate(vertexIndicator, worldPt, Quaternion.identity);
+            Vector3 worldPos = vertices[i] + targetObject.position;
+
+            vertexIndicators[i] = Instantiate(vertexIndicator, worldPos, Quaternion.identity);
             vertexIndicators[i].SetParent(targetObject);
         }
+    }
+
+    private int GetClosestVertex(Vector3 hitPosition) {
+        int closestVertIndex = 0;
+        Vector3 wsVert = vertices[closestVertIndex] + targetObject.position;
+        float minDist = Vector3.Distance(hitPosition, wsVert);
+        
+        for(int i = 1; i < vertices.Length; i++) {
+            wsVert = vertices[i] + targetObject.position;
+            float dist = Vector3.Distance(hitPosition, wsVert);
+
+            if(dist < minDist) {
+                minDist = dist;
+                closestVertIndex = i;
+            }
+        }
+
+        return closestVertIndex;
     }
 }
