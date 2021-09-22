@@ -3,20 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class MeshModifier : MonoBehaviour {
-    [SerializeField]
-    private Camera mainCamera;
-
-    [SerializeField]
-    private Transform vertexIndicator;
-
-    [SerializeField]
-    private Transform targetObject;
-
+    [SerializeField] private Camera mainCamera;
+    [SerializeField] private Transform vertexIndicator;
+    [SerializeField] private Transform targetObject;
+    [SerializeField] private float rotationSpeed = 5000f;
     private Mesh mesh;
     private Vector3[] vertices;
     private Transform[] vertexIndicators;
     private List<int> closestVertIndices = new List<int>();
-    private Vector3 osMousePos;
     private Plane interactionPlane;
 
     private void Start() {
@@ -31,6 +25,7 @@ public class MeshModifier : MonoBehaviour {
         EditMesh();
         UpdateVertexIndicators();
         UpdateObjectMesh();
+        RotateMesh();
     }
 
     private void CreateVertexIndicators() {
@@ -48,14 +43,14 @@ public class MeshModifier : MonoBehaviour {
         List<int> closestCoincidentVertices = new List<int>();      //create list with the closest vertex and the coincident vertices
         closestCoincidentVertices.Add(0);                           //add first vertex as the closest vertex
 
-        Vector3 wsVert = vertices[closestCoincidentVertices[0]] + targetObject.position;    //get the first vertex in world space
-        float minDist = Vector3.Distance(hitPosition, wsVert);                              //get the distance from it to the mouse click
+        Vector3 wsVert = targetObject.TransformPoint(vertices[closestCoincidentVertices[0]]);   //get the first vertex in world space
+        float minDist = Vector3.Distance(hitPosition, wsVert);                                  //get the distance from it to the mouse click
         
         for(int i = 1; i < vertices.Length; i++) {
             if(vertices[i] == vertices[closestCoincidentVertices[0]])   //check if the current vertex is coincident with the closest vertex
                 closestCoincidentVertices.Add(i);                       //add list to the list if so
 
-            wsVert = vertices[i] + targetObject.position;               //get the world position of the current vertex
+            wsVert = targetObject.TransformPoint(vertices[i]);          //get the world position of the current vertex
             float dist = Vector3.Distance(hitPosition, wsVert);         //get the distance to the mouse click
 
             if(dist < minDist) {                        //check if the distance is less than the recorded min distance
@@ -97,7 +92,7 @@ public class MeshModifier : MonoBehaviour {
                     closestVertIndices = GetClosestVertex(hit.point);
                     
                     //create plane parallel to the camera at the position of the closest vertex
-                    interactionPlane = new Plane(mainCamera.transform.forward, vertices[closestVertIndices[0]] + targetObject.position);
+                    interactionPlane = new Plane(mainCamera.transform.forward, targetObject.TransformPoint(vertices[closestVertIndices[0]]));
                 }
             }
         }
@@ -107,7 +102,7 @@ public class MeshModifier : MonoBehaviour {
             //cast the ray intersecting with planes
             if(interactionPlane.Raycast(ray, out float enter)) {
                 //find the mouse position in relation to the targetObject
-                osMousePos = ray.GetPoint(enter) - targetObject.position;
+                Vector3 osMousePos = targetObject.InverseTransformPoint(ray.GetPoint(enter));
                 
                 //update the position of all coincident closest vertices
                 foreach(int vertIndex in closestVertIndices) {
@@ -119,6 +114,15 @@ public class MeshModifier : MonoBehaviour {
         if(Input.GetMouseButtonUp(0)) {
             closestVertIndices.Clear();
             targetObject.GetComponent<MeshCollider>().sharedMesh = mesh;    //update the mesh of the collider
+        }
+    }
+
+    private void RotateMesh() {
+        if(Input.GetMouseButton(2)) {
+            Vector3 yInputRotationAxis = mainCamera.transform.right;
+
+            targetObject.RotateAround(targetObject.position, yInputRotationAxis, Input.GetAxis("Mouse Y") * rotationSpeed * Time.deltaTime);
+            targetObject.RotateAround(targetObject.position, Vector3.up, Input.GetAxis("Mouse X") * -rotationSpeed * Time.deltaTime);
         }
     }
 }
