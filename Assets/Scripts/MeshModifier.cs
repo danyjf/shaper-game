@@ -6,12 +6,14 @@ public class MeshModifier : MonoBehaviour {
     [SerializeField] private Camera mainCamera;
     [SerializeField] private Transform vertexIndicator;
     [SerializeField] private Transform targetObject;
+    [SerializeField] private Strategy strategy;
     [SerializeField] private float rotationSpeed = 5000f;
+    private enum Strategy {PerVertex, AreaDeformation};
+    private PerVertexStrategy perVertexStrategy;
+    private AreaDeformationStrategy areaDeformationStrategy;
     private Mesh mesh;
     private Vector3[] vertices;
     private Transform[] vertexIndicators;
-    private List<int> closestVertIndices = new List<int>();
-    private Plane interactionPlane;
 
     private void Start() {
         mesh = targetObject.GetComponent<MeshFilter>().mesh;
@@ -19,10 +21,21 @@ public class MeshModifier : MonoBehaviour {
 
         //create array of vertexIndicator objects    
         CreateVertexIndicators();
+
+        perVertexStrategy = new PerVertexStrategy(mainCamera, targetObject, mesh, vertices);
+        areaDeformationStrategy = new AreaDeformationStrategy();
     }
 	
     private void Update() {
-        EditMesh();
+        switch(strategy) {
+            case Strategy.PerVertex:
+                perVertexStrategy.EditMesh();
+                break;
+            case Strategy.AreaDeformation:
+
+                break;
+        }
+
         UpdateVertexIndicators();
         UpdateObjectMesh();
         RotateMesh();
@@ -79,43 +92,43 @@ public class MeshModifier : MonoBehaviour {
         }
     }
 
-    private void EditMesh() {
-        //create ray from camera to mouse position
-        Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+    // private void EditMesh() {
+    //     //create ray from camera to mouse position
+    //     Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
 
-        if(Input.GetMouseButtonDown(0)) {
-            //cast the ray intersecting with colliders
-            if(Physics.Raycast(ray, out RaycastHit hit)) {
-                //check if ray hit the targetObject
-                if(hit.transform == targetObject) {
-                    //find the closest vertex
-                    closestVertIndices = GetClosestVertex(hit.point);
+    //     if(Input.GetMouseButtonDown(0)) {
+    //         //cast the ray intersecting with colliders
+    //         if(Physics.Raycast(ray, out RaycastHit hit)) {
+    //             //check if ray hit the targetObject
+    //             if(hit.transform == targetObject) {
+    //                 //find the closest vertex
+    //                 closestVertIndices = GetClosestVertex(hit.point);
                     
-                    //create plane parallel to the camera at the position of the closest vertex
-                    interactionPlane = new Plane(mainCamera.transform.forward, targetObject.TransformPoint(vertices[closestVertIndices[0]]));
-                }
-            }
-        }
+    //                 //create plane parallel to the camera at the position of the closest vertex
+    //                 interactionPlane = new Plane(mainCamera.transform.forward, targetObject.TransformPoint(vertices[closestVertIndices[0]]));
+    //             }
+    //         }
+    //     }
 
-        //if the mouse button is still held down
-        if(closestVertIndices.Count != 0) {
-            //cast the ray intersecting with planes
-            if(interactionPlane.Raycast(ray, out float enter)) {
-                //find the mouse position in relation to the targetObject
-                Vector3 osMousePos = targetObject.InverseTransformPoint(ray.GetPoint(enter));
+    //     //if the mouse button is still held down
+    //     if(closestVertIndices.Count != 0) {
+    //         //cast the ray intersecting with planes
+    //         if(interactionPlane.Raycast(ray, out float enter)) {
+    //             //find the mouse position in relation to the targetObject
+    //             Vector3 osMousePos = targetObject.InverseTransformPoint(ray.GetPoint(enter));
                 
-                //update the position of all coincident closest vertices
-                foreach(int vertIndex in closestVertIndices) {
-                    vertices[vertIndex] = new Vector3(osMousePos.x, osMousePos.y, osMousePos.z);
-                }
-            }
-        }
+    //             //update the position of all coincident closest vertices
+    //             foreach(int vertIndex in closestVertIndices) {
+    //                 vertices[vertIndex] = new Vector3(osMousePos.x, osMousePos.y, osMousePos.z);
+    //             }
+    //         }
+    //     }
 
-        if(Input.GetMouseButtonUp(0)) {
-            closestVertIndices.Clear();
-            targetObject.GetComponent<MeshCollider>().sharedMesh = mesh;    //update the mesh of the collider
-        }
-    }
+    //     if(Input.GetMouseButtonUp(0)) {
+    //         closestVertIndices.Clear();
+    //         targetObject.GetComponent<MeshCollider>().sharedMesh = mesh;    //update the mesh of the collider
+    //     }
+    // }
 
     private void RotateMesh() {
         if(Input.GetMouseButton(2)) {
