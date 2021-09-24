@@ -23,7 +23,7 @@ public class MeshModifier : MonoBehaviour {
         CreateVertexIndicators();
 
         perVertexStrategy = new PerVertexStrategy(mainCamera, targetObject, mesh, vertices);
-        areaDeformationStrategy = new AreaDeformationStrategy();
+        areaDeformationStrategy = new AreaDeformationStrategy(mainCamera, targetObject, mesh, vertices);
     }
 	
     private void Update() {
@@ -32,7 +32,7 @@ public class MeshModifier : MonoBehaviour {
                 perVertexStrategy.EditMesh();
                 break;
             case Strategy.AreaDeformation:
-
+                areaDeformationStrategy.EditMesh();
                 break;
         }
 

@@ -7,6 +7,7 @@ public class PerVertexStrategy {
     private Transform targetObject;
     private Mesh mesh;
     private Vector3[] vertices;
+    private MeshCollider meshCollider;
     private List<int> closestVertIndices = new List<int>();
     private Plane interactionPlane;
 
@@ -15,6 +16,7 @@ public class PerVertexStrategy {
         this.targetObject = targetObject;
         this.mesh = mesh;
         this.vertices = vertices;
+        this.meshCollider = targetObject.GetComponent<MeshCollider>();
     }
 
     public void EditMesh() {
@@ -51,7 +53,7 @@ public class PerVertexStrategy {
 
         if(Input.GetMouseButtonUp(0)) {
             closestVertIndices.Clear();
-            targetObject.GetComponent<MeshCollider>().sharedMesh = mesh;    //update the mesh of the collider
+            meshCollider.sharedMesh = mesh;    //update the mesh of the collider
         }
     }
 
