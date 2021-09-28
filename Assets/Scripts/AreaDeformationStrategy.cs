@@ -9,9 +9,10 @@ public class AreaDeformationStrategy {
     private Mesh mesh;
     private Vector3[] vertices;
     private MeshCollider meshCollider;
-    private float area = 0.1f;
+    private float area = 0.2f;
     private float modificationSpeed = 0.1f;
     private List<int> vertInAreaIndices = new List<int>();
+    private List<float> distances = new List<float>();
 
     public AreaDeformationStrategy(Camera mainCamera, Transform targetObject, Mesh mesh, Vector3[] vertices) {
         this.mainCamera = mainCamera;
@@ -42,12 +43,14 @@ public class AreaDeformationStrategy {
 
     private List<int> GetVerticesInArea(Vector3 hitPosition, float area) {
         List<int> verticesInArea = new List<int>();
+        distances.Clear();
 
         for(int i = 0; i < vertices.Length; i++) {
             Vector3 wsVert = targetObject.TransformPoint(vertices[i]);
             float dist = Vector3.Distance(hitPosition, wsVert);
             if(dist < area) {
                 verticesInArea.Add(i);
+                distances.Add(dist);
             }
         }
 
@@ -55,14 +58,19 @@ public class AreaDeformationStrategy {
     }
 
     private void Intrude() {
-        foreach(int vertIndex in vertInAreaIndices) {
-            vertices[vertIndex] += mainCamera.transform.forward * modificationSpeed * Time.deltaTime;
+        // foreach(int vertIndex in vertInAreaIndices) {
+        //     vertices[vertIndex] += mainCamera.transform.forward * modificationSpeed * Time.deltaTime;
+        // }
+        for(int i = 0; i < vertInAreaIndices.Count; i++) {
+            float dist = 1 - (distances[i] / area);
+            vertices[vertInAreaIndices[i]] += mainCamera.transform.forward * modificationSpeed * dist * Time.deltaTime;
         }
     }
 
     private void Extrude() {
         foreach(int vertIndex in vertInAreaIndices) {
-            vertices[vertIndex] -= mainCamera.transform.forward * modificationSpeed * Time.deltaTime;
+            float dist = distances[vertIndex] / area;
+            vertices[vertIndex] -= mainCamera.transform.forward * modificationSpeed * dist * Time.deltaTime;
         }
     }
 }
