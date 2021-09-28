@@ -58,19 +58,20 @@ public class AreaDeformationStrategy {
     }
 
     private void Intrude() {
-        // foreach(int vertIndex in vertInAreaIndices) {
-        //     vertices[vertIndex] += mainCamera.transform.forward * modificationSpeed * Time.deltaTime;
-        // }
         for(int i = 0; i < vertInAreaIndices.Count; i++) {
             float dist = 1 - (distances[i] / area);
-            vertices[vertInAreaIndices[i]] += mainCamera.transform.forward * modificationSpeed * dist * Time.deltaTime;
+            Vector3 wsVert = targetObject.TransformPoint(vertices[vertInAreaIndices[i]]);
+            wsVert += mainCamera.transform.forward * modificationSpeed * dist * Time.deltaTime;
+            vertices[vertInAreaIndices[i]] = targetObject.InverseTransformPoint(wsVert);
         }
     }
 
     private void Extrude() {
-        foreach(int vertIndex in vertInAreaIndices) {
-            float dist = distances[vertIndex] / area;
-            vertices[vertIndex] -= mainCamera.transform.forward * modificationSpeed * dist * Time.deltaTime;
+        for(int i = 0; i < vertInAreaIndices.Count; i++) {
+            float dist = 1 - (distances[i] / area);
+            Vector3 wsVert = targetObject.TransformPoint(vertices[vertInAreaIndices[i]]);
+            wsVert -= mainCamera.transform.forward * modificationSpeed * dist * Time.deltaTime;
+            vertices[vertInAreaIndices[i]] = targetObject.InverseTransformPoint(wsVert);
         }
     }
 }
