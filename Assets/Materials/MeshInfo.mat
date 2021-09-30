@@ -24,12 +24,16 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
+    - _DeformationEffectArea: 0.2
     - _Shininess: 15
     - _WireSmoothness: 3
     - _WireThickness: 500
     m_Colors:
     - _AmbientColor: {r: 0.5566038, g: 0.5566038, b: 0.5566038, a: 1}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _DeformationEffectArea: {r: 0.39544454, g: 0.38656992, b: 0.6886792, a: 1}
+    - _DeformationEffectAreaColor: {r: 1, g: 0, b: 0, a: 1}
+    - _MousePosition: {r: 0, g: 0, b: 0, a: 0}
     - _SecColor: {r: 1, g: 1, b: 1, a: 1}
     - _SpecColor: {r: 1, g: 1, b: 1, a: 1}
     - _SpecularColor: {r: 1, g: 1, b: 1, a: 1}

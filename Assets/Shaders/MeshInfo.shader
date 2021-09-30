@@ -1,13 +1,16 @@
 Shader "Unlit/MeshInfo" {
     Properties {
         _MainTex("Texture", 2D) = "white" {}
+        _MousePosition("Mouse Position", Vector) = (0.0, 0.0, 0.0, 0.0)
+        _Shininess("Shininess", Float) = 0.5
+        _AmbientColor("Ambient Color", Color) = (0.1, 0.0, 0.0, 1.0)
+        _SpecularColor("Spec Color", Color) = (1.0, 1.0, 1.0, 1.0)
         _WireThickness("Wire Thickness", RANGE(0, 800)) = 100
 		_WireSmoothness("Wire Smoothness", RANGE(0, 20)) = 3
 		_WireColor("Wire Color", Color) = (0.0, 1.0, 0.0, 1.0)
 		_BaseColor("Base Color", Color) = (0.0, 0.0, 0.0, 1.0)
-        _Shininess("Shininess", Float) = 0.5
-        _AmbientColor("Ambient Color", Color) = (0.1, 0.0, 0.0, 1.0)
-        _SpecularColor("Spec Color", Color) = (1.0, 1.0, 1.0, 1.0)
+        _DeformationEffectAreaColor("Deformation Effect Area Color", Color) = (0.0, 0.0, 0.0, 1.0)
+        _DeformationEffectArea("Deformation Effect Area", Float) = 0.2
     }
 	
     SubShader {
@@ -37,36 +40,48 @@ Shader "Unlit/MeshInfo" {
 				float2 uv : TEXCOORD0;
                 float3 normal : TEXCOORD1;
                 float4 worldPos : TEXCOORD2;
-                float3 viewDir : TEXCOORD3;
+                float4 objectPos : TEXCOORD3;
+                float3 viewDir : TEXCOORD4;
             };
 
+            sampler2D _MainTex;
             float _Shininess;
             float4 _AmbientColor;
             float4 _SpecularColor;
+            float4 _MousePosition;
+            float4 _DeformationEffectAreaColor;
+            float _DeformationEffectArea;
 
-            v2f vert (appdata IN) {
+            v2f vert(appdata IN) {
                 v2f OUT;
 				
                 OUT.vertex = UnityObjectToClipPos(IN.vertex);
                 OUT.normal = UnityObjectToWorldNormal(IN.normal);
                 OUT.worldPos = mul(unity_ObjectToWorld, IN.vertex);
+                OUT.objectPos = IN.vertex;
                 OUT.viewDir = normalize(UnityWorldSpaceViewDir(OUT.worldPos));
                 OUT.uv = IN.uv;
                 
 				return OUT;
             }
 
-            fixed4 frag (v2f IN) : SV_Target {
+            fixed4 frag(v2f IN) : SV_Target {
+                float4 texCol = tex2D(_MainTex, IN.uv);
                 float lambertian = max(dot(_WorldSpaceLightPos0, IN.normal), 0.0);
                 float specular = 0.0;
 
-                if (lambertian > 0.0) {
+                if(lambertian > 0.0) {
                     float3 halfDir = normalize(_WorldSpaceLightPos0 + IN.viewDir);
                     float specAngle = max(dot(halfDir, IN.normal), 0.0);
                     specular = pow(specAngle, _Shininess);
                 }
 
                 float3 colorLinear = _AmbientColor + lambertian * _LightColor0 + _SpecularColor * specular * _LightColor0;
+
+                float distToMousePos = distance(_MousePosition.xyz, IN.objectPos.xyz);
+                if(distToMousePos < _DeformationEffectArea) {
+                    return lerp(_DeformationEffectAreaColor, float4(colorLinear,1), distToMousePos / _DeformationEffectArea);
+                }
 
                 return float4(colorLinear,1.0);
             }
