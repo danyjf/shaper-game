@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 2
   tags:
   - VertexIndicator
+  - Shapeable
   layers:
   - Default
   - TransparentFX

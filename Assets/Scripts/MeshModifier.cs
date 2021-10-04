@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class MeshModifier : MonoBehaviour {
-    [SerializeField] private Camera mainCamera;
-    [SerializeField] private Transform targetObject;
+    public Transform targetObject = null;
+
+    [SerializeField] private Camera shaperRoomCamera;
     [SerializeField] private Strategy strategy;
     [SerializeField] private float rotationSpeed = 5000f;
     private enum Strategy {PerVertex, AreaDeformation};
@@ -18,14 +19,14 @@ public class MeshModifier : MonoBehaviour {
     private float previousVolume;
     private float newVolume;
 
-    private void Start() {
+    private void OnEnable() {
         mesh = targetObject.GetComponent<MeshFilter>().mesh;
         vertices = mesh.vertices;
         triangles = mesh.triangles;
         originalVolume = VolumeOfMesh(mesh);
 
-        perVertexStrategy = new PerVertexStrategy(mainCamera, targetObject, mesh, vertices);
-        areaDeformationStrategy = new AreaDeformationStrategy(mainCamera, targetObject, mesh, vertices, originalVolume);
+        perVertexStrategy = new PerVertexStrategy(shaperRoomCamera, targetObject, mesh, vertices);
+        areaDeformationStrategy = new AreaDeformationStrategy(shaperRoomCamera, targetObject, mesh, vertices, originalVolume);
     }
 	
     private void Update() {
@@ -97,7 +98,7 @@ public class MeshModifier : MonoBehaviour {
 
     private void RotateMesh() {
         if(Input.GetMouseButton(2)) {
-            Vector3 yInputRotationAxis = mainCamera.transform.right;
+            Vector3 yInputRotationAxis = shaperRoomCamera.transform.right;
 
             targetObject.RotateAround(targetObject.position, yInputRotationAxis, Input.GetAxis("Mouse Y") * rotationSpeed * Time.deltaTime);
             targetObject.RotateAround(targetObject.position, Vector3.up, Input.GetAxis("Mouse X") * -rotationSpeed * Time.deltaTime);
@@ -118,8 +119,7 @@ public class MeshModifier : MonoBehaviour {
     private float VolumeOfMesh(Mesh mesh) {
         float volume = 0;
 
-        for (int i = 0; i < triangles.Length; i += 3)
-        {
+        for(int i = 0; i < triangles.Length; i += 3) {
             Vector3 p1 = vertices[triangles[i + 0]];
             Vector3 p2 = vertices[triangles[i + 1]];
             Vector3 p3 = vertices[triangles[i + 2]];

@@ -40,7 +40,6 @@ public class AreaDeformationStrategy {
             isIntruding = false;
 
         Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-
         if(Physics.Raycast(ray, out RaycastHit hit)) {
             if(hit.transform == targetObject) {
                 Vector3 obMousePos = targetObject.InverseTransformPoint(hit.point);
