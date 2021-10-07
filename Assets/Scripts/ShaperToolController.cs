@@ -8,7 +8,7 @@ public class ShaperToolController : MonoBehaviour {
     [SerializeField] private GameObject gameUI;
     [SerializeField] private GameObject shaperRoomUI;
     [SerializeField] private MeshModifier meshModifierScript;
-    [SerializeField] private Transform shapeableRoomPos;
+    [SerializeField] private Transform shaperRoomPos;
     
     private Transform target;
 	private Vector3 targetPrevPos;
@@ -27,8 +27,11 @@ public class ShaperToolController : MonoBehaviour {
     }
 
     private void ShaperRoomSetup() {
-        target.position = shapeableRoomPos.position;
         Cursor.lockState = CursorLockMode.None;
+
+        Rigidbody targetRB = target.GetComponent<Rigidbody>();
+        targetRB.constraints = RigidbodyConstraints.FreezeAll;
+        target.position = shaperRoomPos.position;
 
         SwitchCameras();
         SwitchUI();
@@ -49,8 +52,11 @@ public class ShaperToolController : MonoBehaviour {
     }
 
     public void ApplyShape() {
-        target.position = targetPrevPos;
         Cursor.lockState = CursorLockMode.Locked;
+
+        Rigidbody targetRB = target.GetComponent<Rigidbody>();
+        targetRB.constraints = RigidbodyConstraints.None;
+        target.position = targetPrevPos;
 
         SwitchCameras();
         SwitchUI();
